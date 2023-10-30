@@ -66,7 +66,7 @@ def long_running_recognize(storage_uri, channels, sample_rate):
         "enable_automatic_punctuation": False
     }
     # audio = {"uri": storage_uri}
-    audio_path = "./audio.wav"
+    audio_path = "./audio1234-bis.wav"
 
     # Load the audio file
     with open(audio_path, "rb") as audio_file:
@@ -76,7 +76,6 @@ def long_running_recognize(storage_uri, channels, sample_rate):
 
     print(u"Waiting for operation to complete...")
     response = operation.result()
-    print(operation)    
     return response
 
 def subtitle_generation(response, bin_size=3):
@@ -86,11 +85,12 @@ def subtitle_generation(response, bin_size=3):
     transcriptions = []
     index = 0
     for result in response.results:
+        print("results: " + str(result))
         try:
             if result.alternatives[0].words[0].start_time.seconds:
                 # bin start -> for first word of result
                 start_sec = result.alternatives[0].words[0].start_time.seconds 
-                start_microsec = result.alternatives[0].words[0].start_time.nanos * 0.001
+                start_microsec = result.alternatives[0].words[0].start_time.microseconds
             else:
                 # bin start -> For First word of response
                 start_sec = 0
@@ -98,11 +98,10 @@ def subtitle_generation(response, bin_size=3):
             end_sec = start_sec + bin_size # bin end sec
             
             # for last word of result
-            last_word_end_sec = result.alternatives[0].words[-1].end_tissh-keygen -t ed25519 -C me.seconds
-            print(result.alternatives[0].words[-1].end_time) 
-            last_word_end_microsec = result.alternatives[0].words[-1].end_time.nanos * 0.001
-            
-            # bin transcript
+            last_word_end_sec = result.alternatives[0].words[-1].end_time.seconds
+            print("last_word_end_sec: " + str(result.alternatives[0].words[-1].end_time.seconds)) 
+            last_word_end_microsec = result.alternatives[0].words[-1].end_time.microseconds
+        # bin transcript
             transcript = result.alternatives[0].words[0].word
             
             index += 1 # subtitle index
@@ -111,15 +110,15 @@ def subtitle_generation(response, bin_size=3):
                 try:
                     word = result.alternatives[0].words[i + 1].word
                     word_start_sec = result.alternatives[0].words[i + 1].start_time.seconds
-                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.nanos * 0.001 # 0.001 to convert nana -> micro
+                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.microseconds # 0.001 to convert nana -> micro
                     word_end_sec = result.alternatives[0].words[i + 1].end_time.seconds
-                    word_end_microsec = result.alternatives[0].words[i + 1].end_time.nanos * 0.001
+                    word_end_microsec = result.alternatives[0].words[i + 1].end_time.microseconds
 
                     if word_end_sec < end_sec:
                         transcript = transcript + " " + word
                     else:
                         previous_word_end_sec = result.alternatives[0].words[i].end_time.seconds
-                        previous_word_end_microsec = result.alternatives[0].words[i].end_time.nanos * 0.001
+                        previous_word_end_microsec = result.alternatives[0].words[i].end_time.microseconds
                         
                         # append bin transcript
                         transcriptions.append(srt.Subtitle(index, datetime.timedelta(0, start_sec, start_microsec), datetime.timedelta(0, previous_word_end_sec, previous_word_end_microsec), transcript))
@@ -138,17 +137,18 @@ def subtitle_generation(response, bin_size=3):
             index += 1
         except IndexError:
             pass
-    
     # turn transcription list into subtitles
-    # subtitles = srt.compose(transcript)
-    return subtitles
+        # print(transcript)
+        subtitles = srt.compose(transcriptions)
+        print(subtitles)
+    # return subtitles
 
 def main():
     source_file_name = "sourcefile"
-    video_path = "./video.mp4"
-    # channels, bit_rate, sample_rate = video_info(video_path)
-    audio_path = "./audio.wav"
-    audio_info = mediainfo(audio_path)
+    video_path = "./video1234.mp4"
+    channels, bit_rate, sample_rate = video_info(video_path)
+    # audio_path = "./audio2.wav"
+    audio_info = mediainfo(video_path)
 
     # Extract desired information
     channels = audio_info['channels']
@@ -161,10 +161,9 @@ def main():
     # print("hello world")
     storage_url = "gs://my-stt-bucket-01/audio"
     response = long_running_recognize(storage_url, channels, sample_rate)
-    print(response)
-    subtitles= subtitle_generation(response)
-    # with open("subtitles.srt", "w") as f:
-    #     f.write(subtitles)
+    subtitles = str(subtitle_generation(response))
+    with open("subtitles.srt", "w") as f:
+        f.write(subtitles)
 
 if __name__ == "__main__":
     main()
