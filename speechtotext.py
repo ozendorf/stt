@@ -10,6 +10,13 @@ import math
 import datetime
 import srt
 
+#TODO:
+# - handling of google api audio chunk size limit
+# - Adding video download and audio extract automation
+# - Adding automated translation
+# - Integration with ankidroid
+
+
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="active-guild-395117-9e1d030b7f0d.json"
 
 def video_info(video_filepath):
