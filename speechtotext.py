@@ -1,5 +1,5 @@
 import os
-import ffmpeg-python
+import ffmpeg
 import sys
 from google.cloud import storage
 import json
@@ -150,8 +150,26 @@ def main(video_path, audio_path):
     sample_rate = audio_info['sample_rate']
 
     storage_url = "gs://my-stt-bucket-01/audio"
-    directory_path = '/path/to/directory'
-    string_pattern = '*.txt'  # For example, to match all files with a .txt extension
+
+    split_command = [
+    'ffmpeg',
+    '-i',
+    audio_path,
+    '-f',
+    'segment',
+    '-segment_time',
+    '30',
+    '-c',
+    'copy',
+    'splitted-'+audio_path+'-%03d.wav'
+    ]
+
+# Execute the command
+    subprocess.run(split_command)
+
+
+    directory_path = './'
+    string_pattern = 'splitted-'+audio_path+'*'  # For example, to match all files with a .txt extension
 
     # Use glob to find files that match the specified pattern
     matching_files = glob.glob(directory_path + '/' + string_pattern)
@@ -159,10 +177,10 @@ def main(video_path, audio_path):
     # Loop through the matching files
     for file_name in matching_files:
         print(file_name)  
-    response = long_running_recognize(storage_url, channels, sample_rate, audio_path)
-    subtitles = str(subtitle_generation(response))
-    with open("subtitles.srt", "w") as f:
-        f.write(subtitles)
+        response = long_running_recognize(storage_url, channels, sample_rate, file_name)
+        subtitles = str(subtitle_generation(response))
+        with open("subtitles"+audio_path+".srt", "w") as f:
+            f.write(subtitles)
 
 if __name__ == "__main__":
     video_path = sys.argv[1]
