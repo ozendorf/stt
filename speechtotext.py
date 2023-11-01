@@ -1,4 +1,6 @@
 import os
+import ffmpeg-python
+import sys
 from google.cloud import storage
 import json
 import io
@@ -9,13 +11,7 @@ import subprocess
 import math
 import datetime
 import srt
-
-#TODO:
-# - handling of google api audio chunk size limit
-# - Adding video download and audio extract automation
-# - Adding automated translation
-# - Integration with ankidroid
-
+import glob
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="active-guild-395117-9e1d030b7f0d.json"
 
@@ -28,12 +24,6 @@ def video_info(video_filepath):
     sample_rate = video_data["sample_rate"]
 
     return channels, bit_rate, sample_rate
-
-def video_to_audio(video_filepath, audio_filename, video_channels, video_bit_rate, video_sample_rate):
-    command = f"ffmpeg -i {video_filepath} -b:a {video_bit_rate} -ac {video_channels} -ar {video_sample_rate} -vn {audio_filename}"
-    subprocess.call(command, shell=True)
-    blob_name = f"audios/{audio_filename}"
-    upload_blob("stt-bucket-01", audio_filename, blob_name)
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
@@ -59,7 +49,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
         )
     )
 
-def long_running_recognize(storage_uri, channels, sample_rate):
+def long_running_recognize(storage_uri, channels, sample_rate, audio_path):
     
     client = speech.SpeechClient()
 
@@ -71,9 +61,7 @@ def long_running_recognize(storage_uri, channels, sample_rate):
         "enable_word_time_offsets": True,
         "model": "Default",
         "enable_automatic_punctuation": False
-    }
-    # audio = {"uri": storage_uri}
-    audio_path = "./audio1234-bis.wav"
+    }   
 
     # Load the audio file
     with open(audio_path, "rb") as audio_file:
@@ -150,11 +138,10 @@ def subtitle_generation(response, bin_size=3):
         print(subtitles)
     # return subtitles
 
-def main():
+def main(video_path, audio_path):
+
     source_file_name = "sourcefile"
-    video_path = "./video1234.mp4"
     channels, bit_rate, sample_rate = video_info(video_path)
-    # audio_path = "./audio2.wav"
     audio_info = mediainfo(video_path)
 
     # Extract desired information
@@ -162,15 +149,23 @@ def main():
     bit_rate = audio_info['bit_rate']
     sample_rate = audio_info['sample_rate']
 
-    # print(channels, bit_rate, sample_rate)
-    # blob_name=video_to_audio(video_path, "audio.wav", channels, bit_rate, sample_rate)
-    # print(blob_name)
-    # print("hello world")
     storage_url = "gs://my-stt-bucket-01/audio"
-    response = long_running_recognize(storage_url, channels, sample_rate)
+    directory_path = '/path/to/directory'
+    string_pattern = '*.txt'  # For example, to match all files with a .txt extension
+
+    # Use glob to find files that match the specified pattern
+    matching_files = glob.glob(directory_path + '/' + string_pattern)
+
+    # Loop through the matching files
+    for file_name in matching_files:
+        print(file_name)  
+    response = long_running_recognize(storage_url, channels, sample_rate, audio_path)
     subtitles = str(subtitle_generation(response))
     with open("subtitles.srt", "w") as f:
         f.write(subtitles)
 
 if __name__ == "__main__":
-    main()
+    video_path = sys.argv[1]
+    audio_path = sys.argv[2]
+        
+    main(video_path, audio_path)
