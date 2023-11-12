@@ -136,7 +136,7 @@ def subtitle_generation(response, bin_size=3):
         # print(transcript)
         subtitles = srt.compose(transcriptions)
         print(subtitles)
-    # return subtitles
+    return subtitles
 
 def main(video_path, audio_path):
 
@@ -175,13 +175,14 @@ def main(video_path, audio_path):
     matching_files = glob.glob(directory_path + '/' + string_pattern)
 
     # Loop through the matching files
+    i = 000
     for file_name in matching_files:
         print(file_name)  
         response = long_running_recognize(storage_url, channels, sample_rate, file_name)
         subtitles = str(subtitle_generation(response))
-        with open("subtitles"+audio_path+".srt", "w") as f:
+        with open("subtitles"+audio_path+str(i)+".srt", "w") as f:
             f.write(subtitles)
-
+        i += 1
 if __name__ == "__main__":
     video_path = sys.argv[1]
     audio_path = sys.argv[2]
