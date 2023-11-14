@@ -105,7 +105,7 @@ def subtitle_generation(response, bin_size=3):
                 try:
                     word = result.alternatives[0].words[i + 1].word
                     word_start_sec = result.alternatives[0].words[i + 1].start_time.seconds
-                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.microseconds # 0.001 to convert nana -> micro
+                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.microseconds
                     word_end_sec = result.alternatives[0].words[i + 1].end_time.seconds
                     word_end_microsec = result.alternatives[0].words[i + 1].end_time.microseconds
 
@@ -169,14 +169,16 @@ def main(video_path, audio_path):
 
 
     directory_path = './'
-    string_pattern = 'splitted-'+audio_path+'*'  # For example, to match all files with a .txt extension
+    string_pattern = 'splitted-'+audio_path+'*'  
 
     # Use glob to find files that match the specified pattern
     matching_files = glob.glob(directory_path + '/' + string_pattern)
+    sorted_list = sorted(matching_files, key=lambda x: int(x.split('-')[-1].split('.')[0]))
 
+    print(sorted_list)
     # Loop through the matching files
     i = 000
-    for file_name in matching_files:
+    for file_name in sorted_list:
         print(file_name)  
         response = long_running_recognize(storage_url, channels, sample_rate, file_name)
         subtitles = str(subtitle_generation(response))
