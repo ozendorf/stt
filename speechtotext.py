@@ -73,29 +73,31 @@ def long_running_recognize(storage_uri, channels, sample_rate, audio_path):
     response = operation.result()
     return response
 
-def subtitle_generation(response, bin_size=3):
+def subtitle_generation(response, offset, bin_size=3):
     """We define a bin of time period to display the words in sync with audio. 
     Here, bin_size = 3 means each bin is of 3 secs. 
     All the words in the interval of 3 secs in result will be grouped togather."""
     transcriptions = []
     index = 0
+    offset_seconds = offset
+    offset_microseconds = offset * 1000
     for result in response.results:
         print("results: " + str(result))
         try:
             if result.alternatives[0].words[0].start_time.seconds:
                 # bin start -> for first word of result
-                start_sec = result.alternatives[0].words[0].start_time.seconds 
-                start_microsec = result.alternatives[0].words[0].start_time.microseconds
+                start_sec = result.alternatives[0].words[0].start_time.seconds + offset_seconds
+                start_microsec = result.alternatives[0].words[0].start_time.microseconds + offset_microseconds
             else:
                 # bin start -> For First word of response
-                start_sec = 0
-                start_microsec = 0 
+                start_sec = 0 + offset
+                start_microsec = 0 + offset_microseconds
             end_sec = start_sec + bin_size # bin end sec
             
             # for last word of result
-            last_word_end_sec = result.alternatives[0].words[-1].end_time.seconds
+            last_word_end_sec = result.alternatives[0].words[-1].end_time.seconds + offset_seconds
             print("last_word_end_sec: " + str(result.alternatives[0].words[-1].end_time.seconds)) 
-            last_word_end_microsec = result.alternatives[0].words[-1].end_time.microseconds
+            last_word_end_microsec = result.alternatives[0].words[-1].end_time.microseconds + offset_microseconds
         # bin transcript
             transcript = result.alternatives[0].words[0].word
             
@@ -104,16 +106,16 @@ def subtitle_generation(response, bin_size=3):
             for i in range(len(result.alternatives[0].words) - 1):
                 try:
                     word = result.alternatives[0].words[i + 1].word
-                    word_start_sec = result.alternatives[0].words[i + 1].start_time.seconds
-                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.microseconds
-                    word_end_sec = result.alternatives[0].words[i + 1].end_time.seconds
-                    word_end_microsec = result.alternatives[0].words[i + 1].end_time.microseconds
+                    word_start_sec = result.alternatives[0].words[i + 1].start_time.seconds + offset_seconds
+                    word_start_microsec = result.alternatives[0].words[i + 1].start_time.microseconds + offset_microseconds
+                    word_end_sec = result.alternatives[0].words[i + 1].end_time.seconds + offset_seconds
+                    word_end_microsec = result.alternatives[0].words[i + 1].end_time.microseconds + offset_microseconds
 
                     if word_end_sec < end_sec:
                         transcript = transcript + " " + word
                     else:
-                        previous_word_end_sec = result.alternatives[0].words[i].end_time.seconds
-                        previous_word_end_microsec = result.alternatives[0].words[i].end_time.microseconds
+                        previous_word_end_sec = result.alternatives[0].words[i].end_time.seconds + offset_seconds
+                        previous_word_end_microsec = result.alternatives[0].words[i].end_time.microseconds + offset_microseconds
                         
                         # append bin transcript
                         transcriptions.append(srt.Subtitle(index, datetime.timedelta(0, start_sec, start_microsec), datetime.timedelta(0, previous_word_end_sec, previous_word_end_microsec), transcript))
@@ -178,13 +180,15 @@ def main(video_path, audio_path):
     print(sorted_list)
     # Loop through the matching files
     i = 000
+    offset = 0
     for file_name in sorted_list:
         print(file_name)  
         response = long_running_recognize(storage_url, channels, sample_rate, file_name)
-        subtitles = str(subtitle_generation(response))
-        with open("subtitles"+audio_path+str(i)+".srt", "w") as f:
+        subtitles = str(subtitle_generation(response, offset))
+        with open("subtitles"+audio_path+".srt", "a") as f:
             f.write(subtitles)
         i += 1
+        offset += 30
 if __name__ == "__main__":
     video_path = sys.argv[1]
     audio_path = sys.argv[2]
