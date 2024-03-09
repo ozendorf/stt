@@ -3,7 +3,8 @@ import sys
 from google.cloud import storage
 import json
 import io
-from google.cloud import speech
+from google.cloud import speech_v1
+from google.cloud.speech_v1 import types
 import subprocess
 from pydub.utils import mediainfo
 import subprocess
@@ -50,12 +51,12 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
 def long_running_recognize(storage_uri, channels, sample_rate, audio_path):
     
-    client = speech.SpeechClient()
+    client = speech_v1.SpeechClient()
 
     config = {
         "language_code": "ar",
         "sample_rate_hertz": int(sample_rate),
-        "encoding": speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        "encoding": speech_v1.RecognitionConfig.AudioEncoding.LINEAR16,
         "audio_channel_count": int(channels),
         "enable_word_time_offsets": True,
         "model": "Default",
@@ -65,7 +66,7 @@ def long_running_recognize(storage_uri, channels, sample_rate, audio_path):
     # Load the audio file
     with open(audio_path, "rb") as audio_file:
         content = audio_file.read()
-    audio = speech.RecognitionAudio(content=content)
+    audio = types.RecognitionAudio(content=content)
     operation = client.long_running_recognize(config=config, audio=audio)
 
     print(u"Waiting for operation to complete...")
