@@ -8,9 +8,12 @@ The Arabic Language Learning App is designed to assist users in learning Arabic 
 
 ## Features
 
-- **Speech-to-Text Conversion**: The app uses Google's Speech-to-Text API to convert spoken Arabic phrases into text.
-- **Interactive Learning Experience**: Practice speaking Arabic phrases in a dynamic and engaging environment.
-- **Customizable Learning Paths**: Users can customize their learning experience based on their proficiency level and learning goals.
+- **Automated Video Transcription**: Transcribes Arabic videos into text to facilitate comprehension.
+- **Interactive Lessons**: Engage in interactive lessons designed to improve understanding of Arabic language and culture.
+- **Vocabulary Enrichment**: Enhance vocabulary through contextual learning exercises.
+- **Grammar Practice**: Practice Arabic grammar through structured exercises and quizzes.
+- **Progress Tracking**: Track learning progress and performance over time.
+- **Customizable Learning Paths**: Customize learning paths based on proficiency levels and personal goals.
 
 ## Getting Started
 
