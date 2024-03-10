@@ -14,4 +14,6 @@ COPY docker-stt.sh /home/docker-stt.sh
 
 COPY speechtotext.py /home/speechtotext.py
 
-RUN bash /home/docker-stt.sh https://www.youtube.com/watch?v=u5Ef91rJGBQ
+WORKDIR /home
+
+COPY active-guild-395117-9e1d030b7f0d.json /home/active-guild-395117-9e1d030b7f0d.json
